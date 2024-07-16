@@ -1,27 +1,115 @@
-# NgOnChangesObject
+ngOnChanges can be used in the component where we use @Input() in the component
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 17.3.8.
+export class AppComponent {
+  personObj = {
+    username: 'Bini Babu', 
+    age: 24
+  }
+  incrementAge(){
+    this.personObj.age = this.personObj.age +  1;
+  }
+}
 
-## Development server
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
 
-## Code scaffolding
+app.component.html
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+<app-child [personInfo]="personObj"></app-child>
+<button (click)="incrementAge()">Increment Age</button>
 
-## Build
+child,component.ts
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+export class ChildComponent implements OnChanges{
+ @Input() personInfo:any;
 
-## Running unit tests
+  ngOnChanges(changes: SimpleChanges): void {
+   console.log("Changes", changes);
+  }
+}
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
 
-## Running end-to-end tests
 
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+child.component.html
 
-## Further help
+<p>Username : {{personInfo.username}}</p>
+<p>Age : {{personInfo.age}}</p>
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+
+
+
+Here the ( ngOnChanges(changes: SimpleChanges): void {  } ) will not work when age increments because  the below code 
+
+ incrementAge(){
+    this.personObj.age = this.personObj.age +  1;
+  }
+
+
+does not create a new object and just updates the property age directly, this issue can be resolved by assigning new object and when value changes then new object creates as shown below
+
+
+ incrementAge(){
+    this.personObj = {
+      ...this.personObj, 
+      age: this.personObj.age + 1
+    };
+  }
+
+
+thus updating app.component.ts as follows
+
+export class AppComponent {
+  personObj = {
+    username: 'Bini Babu', 
+    age: 24
+  }
+  incrementAge(){
+      this.personObj = {
+      ...this.personObj, 
+      age: this.personObj.age + 1
+    };
+  }
+}
+
+
+
+
+Console Output when clicking the 'Increment Age' button
+
+Changes 
+{personInfo: SimpleChange}
+personInfo
+: 
+SimpleChange
+currentValue
+: 
+{username: 'Bini Babu', age: 25}
+firstChange
+: 
+false
+previousValue
+: 
+{username: 'Bini Babu', age: 24}
+[[Prototype]]
+: 
+Object
+[[Prototype]]
+: 
+Object
+
+
+
+
+Whenever we want to update any value inside the object/ inside an array then create new array/ new object using a spread operator and add a new reference to the object with the update value.( like below)
+
+ this.personObj = {
+      ...this.personObj, 
+      age: this.personObj.age + 1
+    };
+
+This is because ngOnChanges will not check the value change , it will only check the reference change ( then only ngOnChange will trigger).
+
+Below code also can be used to trigger ngOnChanges by creating a new reference of object
+
+incrementAge(){
+    this.personObj = Object.assign({},this.personObj, {age: this.personObj.age + 1});
+  }
